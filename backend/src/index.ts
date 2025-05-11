@@ -30,7 +30,6 @@ app.use((req, res, next) => {
     return;
   }
 
-  console.log("handling request", req.method, req.hostname, req.url, req.path);
   // Log the hostname to MongoDB
   logHostnameWithDate(req.hostname).catch((err) =>
     console.error("Failed to log hostname:", err)
