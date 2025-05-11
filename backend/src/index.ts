@@ -17,6 +17,8 @@ connectToMongo()
 
 // Middleware for handling redirect logic based on the domain
 app.use((req, res, next) => {
+  console.log("Request received:", req.method, req.hostname, req.path);
+
   const host = "redirects." + (mode === "DEV" ? "localhost" : "monkeytype.com");
   if (req.hostname === host) {
     // Serve the frontend dashboard for `redirects` subdomain
@@ -50,4 +52,5 @@ app.use(express.static(path.join(__dirname, "../../frontend/dist")));
 
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
+  console.log(`Mode: ${mode}`);
 });
