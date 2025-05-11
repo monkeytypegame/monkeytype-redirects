@@ -17,6 +17,13 @@ connectToMongo()
 
 // Middleware for handling redirect logic based on the domain
 app.use((req, res, next) => {
+  const host = "redirects." + (mode === "DEV" ? "localhost" : "monkeytype.com");
+  if (req.hostname === host) {
+    // Serve the frontend dashboard for `redirects` subdomain
+    next();
+    return;
+  }
+
   if (req.path.includes(".") || req.method !== "GET") {
     // If the request is not a GET request, skip the redirect logic
     res.sendStatus(404);
@@ -24,27 +31,21 @@ app.use((req, res, next) => {
   }
 
   console.log("handling request", req.method, req.hostname, req.url, req.path);
-  const host = "redirects." + (mode === "DEV" ? "localhost" : "monkeytype.com");
-  if (req.hostname === host) {
-    // Serve the frontend dashboard for `redirects` subdomain
-    next();
-  } else {
-    // Log the hostname to MongoDB
-    logHostnameWithDate(req.hostname).catch((err) =>
-      console.error("Failed to log hostname:", err)
-    );
+  // Log the hostname to MongoDB
+  logHostnameWithDate(req.hostname).catch((err) =>
+    console.error("Failed to log hostname:", err)
+  );
 
-    if (mode === "DEV") {
-      //respond with json
-      res.status(200).json({
-        message: "This is the development mode. Redirects are not available.",
-      });
-      return;
-    }
-
-    // Log and redirect for typo domains
-    res.redirect(301, `https://monkeytype.com`);
+  if (mode === "DEV") {
+    //respond with json
+    res.status(200).json({
+      message: "This is the development mode. Redirects are not available.",
+    });
+    return;
   }
+
+  // Log and redirect for typo domains
+  res.redirect(301, `https://monkeytype.com`);
 });
 
 // Catch-all route to handle frontend routing (React/Vue/Svelte SPA)
