@@ -17,6 +17,8 @@ services:
       - mongo-data:/data/db
     networks:
       - appnet
+    ports:
+      - "27017:27017"
 
 volumes:
   mongo-data:
