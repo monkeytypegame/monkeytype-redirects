@@ -43,7 +43,7 @@ app.use((req, res, next) => {
       message: "This will redirect to monkeytype in prod mode.",
     });
   } else {
-    res.redirect(301, `https://monkeytype.com`);
+    res.redirect(302, `https://monkeytype.com`);
   }
 });
 
