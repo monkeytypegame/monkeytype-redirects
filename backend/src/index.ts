@@ -39,13 +39,11 @@ app.use((req, res, next) => {
   if (mode === "DEV") {
     //respond with json
     res.status(200).json({
-      message: "This is the development mode. Redirects are not available.",
+      message: "This will redirect to monkeytype in prod mode.",
     });
-    return;
+  } else {
+    res.redirect(301, `https://monkeytype.com`);
   }
-
-  // Log and redirect for typo domains
-  res.redirect(301, `https://monkeytype.com`);
 });
 
 // Catch-all route to handle frontend routing (React/Vue/Svelte SPA)
