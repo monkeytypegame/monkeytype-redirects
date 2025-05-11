@@ -17,18 +17,22 @@ connectToMongo()
 
 // Middleware for handling redirect logic based on the domain
 app.use((req, res, next) => {
-  console.log("handling request", req.method, req.hostname, req.url);
+  if (req.path.includes(".") || req.method !== "GET") {
+    // If the request is not a GET request, skip the redirect logic
+    res.sendStatus(404);
+    return;
+  }
+
+  console.log("handling request", req.method, req.hostname, req.url, req.path);
   const host = "redirects." + (mode === "DEV" ? "localhost" : "monkeytype.com");
   if (req.hostname === host) {
     // Serve the frontend dashboard for `redirects` subdomain
     next();
   } else {
-    if (req.path === "/" || req.path === "" || !req.path.includes(".")) {
-      // Log the hostname to MongoDB
-      logHostnameWithDate(req.hostname).catch((err) =>
-        console.error("Failed to log hostname:", err)
-      );
-    }
+    // Log the hostname to MongoDB
+    logHostnameWithDate(req.hostname).catch((err) =>
+      console.error("Failed to log hostname:", err)
+    );
 
     if (mode === "DEV") {
       //respond with json
