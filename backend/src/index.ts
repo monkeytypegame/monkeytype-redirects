@@ -1,19 +1,34 @@
 // backend/server.js
 import express from "express";
 import path from "path";
+import { connectToMongo, logHostnameWithDate } from "./mongo";
 
 const app = express();
 const port = process.env.PORT || 3000;
 const mode = process.env.MODE || "DEV";
 
+// Connect to MongoDB when server starts
+connectToMongo()
+  .then(() => console.log("MongoDB connection initialized"))
+  .catch((err) => {
+    console.error("Failed to connect to MongoDB:", err);
+    process.exit(1); // Exit if MongoDB connection fails
+  });
+
 // Middleware for handling redirect logic based on the domain
 app.use((req, res, next) => {
+  console.log("handling request", req.method, req.hostname, req.url);
   const host = "redirects." + (mode === "DEV" ? "localhost" : "monkeytype.com");
   if (req.hostname === host) {
     // Serve the frontend dashboard for `redirects` subdomain
     next();
   } else {
-    console.log(`Redirecting from ${req.hostname}`);
+    if (req.path === "/" || req.path === "" || !req.path.includes(".")) {
+      // Log the hostname to MongoDB
+      logHostnameWithDate(req.hostname).catch((err) =>
+        console.error("Failed to log hostname:", err)
+      );
+    }
 
     if (mode === "DEV") {
       //respond with json
