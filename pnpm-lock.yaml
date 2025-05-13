@@ -26,6 +26,9 @@ importers:
       path:
         specifier: ^0.12.7
         version: 0.12.7
+      zod:
+        specifier: ^3.24.4
+        version: 3.24.4
     devDependencies:
       '@types/express':
         specifier: ^5.0.1
