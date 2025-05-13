@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getConfigByUUID, getConfigs } from "../mongo";
+import { getConfigByUUID, getConfigs, getRedirectStats } from "../mongo";
 import { validateParams } from "../middlewares/validate";
 import { z } from "zod";
 
@@ -15,13 +15,13 @@ router.get("/configs", async (req, res) => {
   });
 });
 
-const ConfigsUUIDSchema = z.object({
+const uuidParamsSchema = z.object({
   uuid: z.string().uuid(),
 });
 
 router.get(
   "/configs/:uuid",
-  validateParams(ConfigsUUIDSchema),
+  validateParams(uuidParamsSchema),
   async (req, res) => {
     const { uuid } = req.params;
     const config = await getConfigByUUID(uuid);
@@ -33,6 +33,25 @@ router.get(
     }
     res.status(200).json({
       message: "Config retrieved successfully",
+      config,
+    });
+  }
+);
+
+router.get(
+  "/stats/:uuid",
+  validateParams(uuidParamsSchema),
+  async (req, res) => {
+    const { uuid } = req.params;
+    const config = await getRedirectStats(uuid);
+    if (!config) {
+      res.status(404).json({
+        message: `Stats for ${uuid} not found`,
+      });
+      return;
+    }
+    res.status(200).json({
+      message: "Stats retrieved successfully",
       config,
     });
   }
