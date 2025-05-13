@@ -16,70 +16,72 @@ const client = new MongoClient(MONGO_URI, {
  * Connects to MongoDB using native MongoDB driver
  */
 export async function connectToMongo(): Promise<void> {
-  try {
-    await client.connect();
-    console.log("Successfully connected to MongoDB");
-  } catch (error) {
-    console.error("Failed to connect to MongoDB:", error);
-    throw error;
-  }
+  await client.connect();
 }
 
-/**
- * Logs the current hostname with today's date in year-month-day format
- * and stores this information in the MongoDB hostnames collection
- * @returns {Promise<string>} The formatted log message
- */
-export async function logHostnameWithDate(hostname: string): Promise<void> {
+type Redirect = {
+  uuid: string;
+  source: string;
+  target: string;
+  createdAt: Date;
+};
+
+export function findConfigByHostname(
+  hostname: string
+): Promise<Redirect | null> {
+  return client
+    .db()
+    .collection<Redirect>("configs")
+    .findOne({ source: hostname });
+}
+
+export async function getConfigs(): Promise<Redirect[]> {
+  return client.db().collection<Redirect>("configs").find().toArray();
+}
+
+export async function getConfigByUUID(uuid: string): Promise<Redirect | null> {
+  return client.db().collection<Redirect>("configs").findOne({ uuid });
+}
+
+export type RedirectStats = {
+  uuid: string;
+  redirectCounts: Record<string, number>;
+  totalRedirects: number;
+  lastRedirected: Date;
+};
+
+export async function getRedirectStats(
+  uuid: string
+): Promise<RedirectStats | null> {
+  return client.db().collection<RedirectStats>("stats").findOne({ uuid });
+}
+
+export async function logRedirect(uuid: string): Promise<void> {
   const today = new Date();
   const formattedDate = format(today, "yyyy-MM-dd");
 
-  try {
-    const db = getDb();
-    const hostnamesCollection = db.collection("hostnames");
+  const db = getDb();
+  const redirectsCollection = db.collection("stats");
 
-    // Try to find an existing document for this hostname
-    const existingDoc = await hostnamesCollection.findOne({ hostname });
-
-    if (existingDoc) {
-      // Update the existing document
-      const redirectCounts = existingDoc.redirectCounts || {};
-
-      // Increment the count for today's date or initialize it to 1
-      redirectCounts[formattedDate] = (redirectCounts[formattedDate] || 0) + 1;
-
-      // Calculate the total redirects by adding 1 to the existing total or initialize to 1
-      const totalRedirects = (existingDoc.totalRedirects || 0) + 1;
-
-      await hostnamesCollection.updateOne(
-        { hostname },
-        {
-          $set: {
-            lastRedirected: today,
-            redirectCounts,
-            totalRedirects,
-          },
-        }
-      );
-
-      console.log(`Updated redirect count for hostname: ${hostname}`);
-    } else {
-      // Create a new document
-      const redirectCounts = {
-        [formattedDate]: 1,
-      };
-
-      await hostnamesCollection.insertOne({
-        hostname,
-        lastRedirected: today,
-        redirectCounts,
-        totalRedirects: 1,
-      });
-
-      console.log(`Created new hostname entry for: ${hostname}`);
+  // Try to update, and if no document exists, insert a new one
+  const updateResult = await redirectsCollection.updateOne(
+    { uuid },
+    {
+      $inc: { totalRedirects: 1, [`redirectCounts.${formattedDate}`]: 1 },
+      $set: { lastRedirected: today },
     }
-  } catch (error) {
-    console.error("Failed to log hostname to database:", error);
+  );
+
+  if (updateResult.matchedCount === 0) {
+    // No document found, insert a new one
+    const redirectCounts = { [formattedDate]: 1 };
+    await redirectsCollection.insertOne({
+      uuid,
+      redirectCounts,
+      totalRedirects: 1,
+      lastRedirected: today,
+    });
+    console.log(`Created new redirect entry for UUID: ${uuid}`);
   }
 }
 
@@ -89,6 +91,5 @@ export const getDb = () => client.db();
 // Default export for easier importing
 export default {
   connectToMongo,
-  logHostnameWithDate,
   getDb,
 };
