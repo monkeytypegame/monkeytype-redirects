@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import RedirectStats from "./components/RedirectStats";
 import Navbar from "./components/Navbar";
 import AddRedirectDialog from "./components/AddRedirectDialog";
+import LoginForm from "./components/LoginForm";
 
 const RANGES = [
   { label: "Last 7 days", value: 7 },
@@ -9,52 +10,6 @@ const RANGES = [
   { label: "Last 365 days", value: 365 },
   { label: "All time", value: null },
 ];
-
-function Login({ onLogin }: { onLogin: () => void }) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    try {
-      const res = await fetch("http://localhost:3000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.message);
-        return;
-      }
-      localStorage.setItem("token", data.token);
-      onLogin();
-    } catch {
-      setError("Something went wrong. Please try again.");
-    }
-  };
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <form onSubmit={handleSubmit}>
-        <h2 className="text-xl mb-4">Login</h2>
-        <input
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        <input
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        {error && <div className="text-red-500 mb-2">{error}</div>}
-        <button type="submit">Login</button>
-      </form>
-    </div>
-  );
-}
 
 function isAuthenticated() {
   return !!localStorage.getItem("token");
@@ -100,7 +55,7 @@ function App() {
   }, []);
 
   if (!authed) {
-    return <Login onLogin={() => setAuthed(true)} />;
+    return <LoginForm onLogin={() => setAuthed(true)} />;
   }
 
   return (

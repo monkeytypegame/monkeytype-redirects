@@ -50,7 +50,7 @@ export function RedirectStatCard({ item, range, yMax }: RedirectStatCardProps) {
   const chartData = getFilledChartData(item.stats?.redirectCounts || {}, range);
 
   return (
-    <Card className="xl:h-80 h-110 flex flex-col xl:flex-row items-center bg-card text-card-foreground p-8">
+    <Card className="relative xl:h-80 h-110 flex flex-col xl:flex-row items-center bg-card text-card-foreground p-8">
       <div className="w-full xl:w-1/4 flex flex-col gap-2 mb-6 xl:mb-0">
         <div className="flex flex-row xl:flex-col gap-4 mb-2">
           <div className="flex-1">
@@ -125,6 +125,9 @@ export function RedirectStatCard({ item, range, yMax }: RedirectStatCardProps) {
             <Bar dataKey="count" fill="var(--color-count)" radius={4}></Bar>
           </BarChart>
         </ChartContainer>
+      </div>
+      <div className="opacity-10 text-[0.1em] absolute bottom-0 right-0 p-4">
+        {item.uuid}
       </div>
     </Card>
   );
