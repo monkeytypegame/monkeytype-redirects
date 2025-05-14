@@ -15,7 +15,9 @@ function LoginForm({ onLogin }: LoginFormProps) {
     e.preventDefault();
     setError("");
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:3000' : undefined);
+      const apiBaseUrl =
+        import.meta.env.VITE_API_BASE_URL ||
+        (import.meta.env.DEV ? "http://localhost:3000" : undefined);
       const res = await fetch(`${apiBaseUrl}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

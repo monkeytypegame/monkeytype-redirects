@@ -148,9 +148,15 @@ importers:
       globals:
         specifier: ^16.0.0
         version: 16.1.0
+      path:
+        specifier: ^0.12.7
+        version: 0.12.7
       postcss:
         specifier: ^8.5.3
         version: 8.5.3
+      process:
+        specifier: ^0.11.10
+        version: 0.11.10
       tailwindcss:
         specifier: ^4.1.6
         version: 4.1.6

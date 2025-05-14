@@ -5,8 +5,10 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  if (mode === 'production' && !env.VITE_API_BASE_URL) {
-    throw new Error('VITE_API_BASE_URL must be set in production build. Please set it in your .env file.');
+  if (mode === "production" && !env.VITE_API_BASE_URL) {
+    throw new Error(
+      "VITE_API_BASE_URL must be set in production build. Please set it in your .env file."
+    );
   }
   return {
     plugins: [react(), tailwindcss()],

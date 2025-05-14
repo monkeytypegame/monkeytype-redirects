@@ -24,7 +24,9 @@ export default function RedirectStats({ range }: RedirectStatsProps) {
   const [stats, setStats] = useState<RedirectStat[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:3000' : undefined);
+  const apiBaseUrl =
+    import.meta.env.VITE_API_BASE_URL ||
+    (import.meta.env.DEV ? "http://localhost:3000" : undefined);
 
   useEffect(() => {
     fetch(`${apiBaseUrl}/api/ui-data`, {
