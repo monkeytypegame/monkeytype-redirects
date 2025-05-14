@@ -116,7 +116,9 @@ export function RedirectStatCard({ item, range, yMax }: RedirectStatCardProps) {
               domain={[0, yMax]}
               axisLine={false}
               tickLine={false}
-              tick={false}
+              tickFormatter={() => ""}
+              tickCount={Math.floor(yMax / 10) + 1}
+              interval={0}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             {/* <ChartLegend content={<ChartLegendContent />} /> */}
