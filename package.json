@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "cd frontend && pnpm build && cd ../backend && pnpm start",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "turbo run dev",
     "docker-build": "docker build -t monkeytype-redirects-app:latest ."
