@@ -57,7 +57,7 @@ export function RedirectStatCard({ item, range, yMax }: RedirectStatCardProps) {
             <div className="text-xs text-muted-foreground uppercase tracking-wide">
               Source
             </div>
-            <div className="text-4xl font-extrabold text-card-foreground">
+            <div className="text-3xl font-extrabold text-card-foreground">
               {item.source}
             </div>
           </div>
@@ -65,7 +65,7 @@ export function RedirectStatCard({ item, range, yMax }: RedirectStatCardProps) {
             <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
               Total Redirects
             </div>
-            <div className="text-4xl font-bold text-card-foreground">
+            <div className="text-3xl font-bold text-card-foreground">
               {item.stats?.totalRedirects ?? 0}
             </div>
           </div>
