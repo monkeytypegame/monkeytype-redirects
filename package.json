@@ -7,7 +7,7 @@
     "start": "cd frontend && pnpm build && cd ../backend && pnpm start",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "turbo run dev",
-    "docker-build": "docker build -t monkeytype-redirects-app:latest ."
+    "docker-build": "docker build --build-arg VITE_API_BASE_URL=$VITE_API_BASE_URL -t monkeytype-redirects-app:latest ."
   },
   "keywords": [],
   "author": "",
