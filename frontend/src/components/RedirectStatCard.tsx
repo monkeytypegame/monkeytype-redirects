@@ -1,6 +1,15 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Card } from "./ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "./ui/chart";
+import { Badge } from "./ui/badge";
+import { Check, X, LoaderCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "./ui/tooltip";
 
 interface RedirectStat {
   _id: string;
@@ -89,6 +98,7 @@ export function RedirectStatCard({ item, range, yMax }: RedirectStatCardProps) {
                 : "—"}
             </div>
           </div>
+          <TestResultBadges uuid={item.uuid} />
         </div>
       </div>
       <div className="w-full xl:w-3/4 h-50">
@@ -130,5 +140,114 @@ export function RedirectStatCard({ item, range, yMax }: RedirectStatCardProps) {
         {item.uuid}
       </div>
     </Card>
+  );
+}
+
+function TestResultBadges({ uuid }: { uuid: string }) {
+  // State for HTTP/HTTPS test results
+  const [httpStatus, setHttpStatus] = useState<"loading" | "success" | "error">(
+    "loading"
+  );
+  const [httpsStatus, setHttpsStatus] = useState<
+    "loading" | "success" | "error"
+  >("loading");
+  const [httpError, setHttpError] = useState<string | undefined>();
+  const [httpsError, setHttpsError] = useState<string | undefined>();
+
+  useEffect(() => {
+    let isMounted = true;
+    setHttpStatus("loading");
+    setHttpsStatus("loading");
+    setHttpError(undefined);
+    setHttpsError(undefined);
+    fetch(`http://localhost:3000/api/test-redirect/${uuid}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Failed to test redirect");
+        const data = await res.json();
+        if (!isMounted) return;
+        setHttpStatus(data.data.http.result ? "success" : "error");
+        setHttpsStatus(data.data.https.result ? "success" : "error");
+        setHttpError(data.data.http.error);
+        setHttpsError(data.data.https.error);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setHttpStatus("error");
+        setHttpsStatus("error");
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [uuid]);
+
+  return (
+    <div className="flex gap-2">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge
+              className={
+                httpStatus === "loading"
+                  ? "bg-gray-400"
+                  : httpStatus === "success"
+                  ? "bg-green-400"
+                  : "bg-red-400"
+              }
+            >
+              {httpStatus === "loading" ? (
+                <LoaderCircle className="animate-spin" strokeWidth={5} />
+              ) : httpStatus === "success" ? (
+                <Check strokeWidth={5} />
+              ) : (
+                <X strokeWidth={5} />
+              )}
+              HTTP
+            </Badge>
+          </TooltipTrigger>
+          {httpStatus === "error" && httpError && (
+            <TooltipContent>
+              <p>{httpError}</p>
+            </TooltipContent>
+          )}
+          {httpStatus === "success" && (
+            <TooltipContent>
+              <p>All good!</p>
+            </TooltipContent>
+          )}
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge
+              className={
+                httpsStatus === "loading"
+                  ? "bg-gray-400"
+                  : httpsStatus === "success"
+                  ? "bg-green-400"
+                  : "bg-red-400"
+              }
+            >
+              {httpsStatus === "loading" ? (
+                <LoaderCircle className="animate-spin" strokeWidth={5} />
+              ) : httpsStatus === "success" ? (
+                <Check strokeWidth={5} />
+              ) : (
+                <X strokeWidth={5} />
+              )}
+              HTTPS
+            </Badge>
+          </TooltipTrigger>
+          {httpsStatus === "error" && httpsError && (
+            <TooltipContent>
+              <p>{httpsError}</p>
+            </TooltipContent>
+          )}
+          {httpsStatus === "success" && (
+            <TooltipContent>
+              <p>All good!</p>
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </TooltipProvider>
+    </div>
   );
 }

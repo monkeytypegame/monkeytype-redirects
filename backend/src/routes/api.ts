@@ -201,20 +201,22 @@ router.get(
     const portOnDev = process.env.NODE_ENV === "production" ? "" : ":3000";
 
     let httpError = "";
+    const httpController = new AbortController();
+    const httpTimeout = setTimeout(() => httpController.abort(), 3000);
     const httpGood = await fetch(
       `http://${config.source}${portOnDev}/redirect`,
       {
         headers: {
           "x-monkeytype-redirects-test": "true",
         },
+        signal: httpController.signal,
       }
     )
       .then(async (response) => {
+        clearTimeout(httpTimeout);
         //make sure to remove trailing slashes
-
         const responseUrl = response.url.replace(/\/+$/, "");
         const targetUrl = config.target.replace(/\/+$/, "");
-
         if (
           response.redirected === true &&
           response.status === 200 &&
@@ -222,50 +224,52 @@ router.get(
         ) {
           return true;
         }
-
         logger.warn(
           `Redirect test failed for ${uuid}: redirected - ${response.redirected} status - ${response.status} url - ${response.url}`
         );
-
         if (response.redirected === false) {
           httpError = `Request was not redirected`;
           return false;
         }
-
         if (response.status !== 200) {
           httpError = `Request returned status ${response.status}`;
           return false;
         }
-
         if (responseUrl !== targetUrl) {
           httpError = `Request returned url ${responseUrl} instead of ${targetUrl}`;
           return false;
         }
-
         return false;
       })
       .catch((e) => {
+        clearTimeout(httpTimeout);
         logger.error(`HTTP redirect test failed for ${uuid}`);
         logger.error("Error", e);
-        httpError = e.cause.code || "Request failed";
+        if (e.name === "AbortError") {
+          httpError = "Request timed out";
+        } else {
+          httpError = e.cause?.code || "Request failed";
+        }
         return false;
       });
 
     let httpsError = "";
+    const httpsController = new AbortController();
+    const httpsTimeout = setTimeout(() => httpsController.abort(), 3000);
     const httpsGood = await fetch(
       `https://${config.source}${portOnDev}/redirect`,
       {
         headers: {
           "x-monkeytype-redirects-test": "true",
         },
+        signal: httpsController.signal,
       }
     )
       .then(async (response) => {
+        clearTimeout(httpsTimeout);
         //make sure to remove trailing slashes
-
         const responseUrl = response.url.replace(/\/+$/, "");
         const targetUrl = config.target.replace(/\/+$/, "");
-
         if (
           response.redirected === true &&
           response.status === 200 &&
@@ -273,32 +277,32 @@ router.get(
         ) {
           return true;
         }
-
         logger.warn(
           `Redirect test failed for ${uuid}: redirected - ${response.redirected} status - ${response.status} url - ${response.url}`
         );
-
         if (response.redirected === false) {
           httpsError = `Request was not redirected`;
           return false;
         }
-
         if (response.status !== 200) {
           httpsError = `Request returned status ${response.status}`;
           return false;
         }
-
         if (responseUrl !== targetUrl) {
           httpsError = `Request returned url ${responseUrl} instead of ${targetUrl}`;
           return false;
         }
-
         return false;
       })
       .catch((e) => {
+        clearTimeout(httpsTimeout);
         logger.error(`HTTPS redirect test failed for ${uuid}`);
         logger.error("Error", e);
-        httpsError = e.cause.code || "Request failed";
+        if (e.name === "AbortError") {
+          httpsError = "Request timed out";
+        } else {
+          httpsError = e.cause?.code || "Request failed";
+        }
         return false;
       });
 
