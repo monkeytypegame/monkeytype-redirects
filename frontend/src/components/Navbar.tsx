@@ -20,7 +20,7 @@ export default function Navbar({ range, setRange, ranges }: NavbarProps) {
       >
         monkeytype-redirects
       </h1>
-      <div className="flex gap-2 align-center rounded-md ring-ring/50 ring-1 p-2">
+      <div className="flex gap-2 align-center rounded-md">
         {ranges.map((r) => (
           <Button
             key={r.label}
