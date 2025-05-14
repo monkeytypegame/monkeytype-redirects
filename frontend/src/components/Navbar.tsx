@@ -8,10 +8,11 @@ interface NavbarProps {
 
 export default function Navbar({ range, setRange, ranges }: NavbarProps) {
   return (
-    <div className="my-8 flex justify-between align-center">
+    <div className="py-8 flex justify-between align-center">
       <h1
         className="text-3xl font-bold"
         style={{
+          //@ts-ignore it exists
           "text-box-edge": "ex alphabetic",
           "text-box-trim": "trim-both",
           "align-self": "center",
