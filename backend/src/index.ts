@@ -5,17 +5,25 @@ import { registerRoutes } from "./routes";
 import logger from "./logger";
 import cors from "cors";
 import helmet from "helmet";
+import { globalRateLimiter } from "./middlewares/rateLimit";
 
 const app = express();
 app.use(cors());
 app.use(helmet());
 app.use(express.json());
+app.use(globalRateLimiter);
 
 const port = process.env.PORT || 3000;
 const prodMode = process.env.NODE_ENV === "production";
 
 function boot() {
   logger.info("Booting up...");
+
+  if (prodMode && !process.env.JWT_SECRET) {
+    logger.error("JWT_SECRET is not set in production mode");
+    process.exit(1);
+  }
+
   // Add any additional boot logic here
   logger.info("Connecting to MongoDB...");
   connectToMongo()

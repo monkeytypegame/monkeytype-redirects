@@ -6,10 +6,12 @@
     "start": "tsx src/index.ts"
   },
   "dependencies": {
+    "@types/express-rate-limit": "^6.0.2",
     "@types/jsonwebtoken": "^9.0.9",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "express": "^4.17.1",
+    "express-rate-limit": "^7.5.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.16.0",

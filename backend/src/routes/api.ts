@@ -7,22 +7,19 @@ import {
   createUser,
   findUserByUsername,
 } from "../mongo";
-import {
-  validateBody,
-  validateParams,
-  requireAuth,
-} from "../middlewares/validate";
+import { validateBody, validateParams } from "../middlewares/validate";
 import { z } from "zod";
 import logger from "../logger";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { authenticateWithBearer } from "../middlewares/authenticate";
 
 const JWT_SECRET = process.env.JWT_SECRET || "changeme";
 
 const router = Router();
 
 // Serve static files for the frontend dashboard
-router.get("/configs", requireAuth(), async (req, res) => {
+router.get("/configs", authenticateWithBearer(), async (req, res) => {
   const configs = (await getConfigs()) ?? [];
   logger.info(`Retrieved ${configs.length} configs`);
 
@@ -39,7 +36,7 @@ const uuidParamsSchema = z.object({
 router.get(
   "/configs/:uuid",
   validateParams(uuidParamsSchema),
-  requireAuth(),
+  authenticateWithBearer(),
   async (req, res) => {
     const { uuid } = req.params;
     const config = await getConfigByUUID(uuid);
@@ -65,7 +62,7 @@ const createConfigSchema = z.object({
 router.post(
   "/configs",
   validateBody(createConfigSchema),
-  requireAuth(),
+  authenticateWithBearer(),
   async (req, res) => {
     const { source, target } = req.body;
 
@@ -94,7 +91,7 @@ router.post(
 router.get(
   "/stats/:uuid",
   validateParams(uuidParamsSchema),
-  requireAuth(),
+  authenticateWithBearer(),
   async (req, res) => {
     const { uuid } = req.params;
     const config = await getRedirectStats(uuid);
@@ -112,7 +109,7 @@ router.get(
   }
 );
 
-router.get("/ui-data", requireAuth(), async (req, res) => {
+router.get("/ui-data", authenticateWithBearer(), async (req, res) => {
   const configs = (await getConfigs()) ?? [];
   const stats = await Promise.all(
     configs.map(async (config) => {
@@ -139,7 +136,7 @@ router.post("/register", validateBody(authSchema), async (req, res) => {
   const { username, password } = req.body;
 
   const user = await findUserByUsername(username);
-  if (!user) {
+  if (user) {
     logger.warn(`Register failed for ${username}: user already exists`);
     res.status(409).json({
       message: "User already exists",
