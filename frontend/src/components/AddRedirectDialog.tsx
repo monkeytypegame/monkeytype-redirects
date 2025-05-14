@@ -27,7 +27,8 @@ export default function AddRedirectDialog({
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:3000/api/configs", {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:3000' : undefined);
+      const res = await fetch(`${apiBaseUrl}/api/configs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ source, target }),

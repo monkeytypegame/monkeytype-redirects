@@ -24,8 +24,10 @@ export default function RedirectStats({ range }: RedirectStatsProps) {
   const [stats, setStats] = useState<RedirectStat[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:3000' : undefined);
+
   useEffect(() => {
-    fetch("http://localhost:3000/api/ui-data", {
+    fetch(`${apiBaseUrl}/api/ui-data`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         "Content-Type": "application/json",

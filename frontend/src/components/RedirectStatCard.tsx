@@ -156,12 +156,16 @@ function TestResultBadges({ uuid }: { uuid: string }) {
   const [httpsError, setHttpsError] = useState<string | undefined>();
 
   useEffect(() => {
+    const apiBaseUrl =
+      import.meta.env.VITE_API_BASE_URL ||
+      (import.meta.env.DEV ? "http://localhost:3000" : undefined);
+
     let isMounted = true;
     setHttpStatus("loading");
     setHttpsStatus("loading");
     setHttpError(undefined);
     setHttpsError(undefined);
-    fetch(`http://localhost:3000/api/test-redirect/${uuid}`)
+    fetch(`${apiBaseUrl}/api/test-redirect/${uuid}`)
       .then(async (res) => {
         if (!res.ok) throw new Error("Failed to test redirect");
         const data = await res.json();
