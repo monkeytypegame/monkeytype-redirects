@@ -4,6 +4,8 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install
 COPY frontend .
+# Remove any .env files if present
+RUN rm -f .env .env.* || true
 RUN npm run build
 
 # 2. Build backend
@@ -14,6 +16,8 @@ COPY backend/package.json backend/package-lock.json* ./
 RUN npm install
 # Now copy the rest of the backend source code (excluding node_modules)
 COPY backend .
+# Remove any .env files if present
+RUN rm -f .env .env.* || true
 # Copy built frontend into backend's public directory (adjust as needed)
 WORKDIR /
 COPY --from=frontend-builder /app/frontend/dist ./app/frontend/dist
