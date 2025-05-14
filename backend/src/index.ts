@@ -3,8 +3,13 @@ import express from "express";
 import { connectToMongo } from "./mongo";
 import { registerRoutes } from "./routes";
 import logger from "./logger";
+import cors from "cors";
+import helmet from "helmet";
 
 const app = express();
+app.use(cors());
+app.use(helmet());
+
 const port = process.env.PORT || 3000;
 const prodMode = process.env.NODE_ENV === "production";
 
