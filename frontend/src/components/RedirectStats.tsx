@@ -16,7 +16,11 @@ interface RedirectStat {
   };
 }
 
-export default function RedirectStats() {
+interface RedirectStatsProps {
+  range: number | null;
+}
+
+export default function RedirectStats({ range }: RedirectStatsProps) {
   const [stats, setStats] = useState<RedirectStat[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,7 +39,7 @@ export default function RedirectStats() {
     <div className="">
       <div className="flex flex-col gap-6">
         {stats.map((item) => (
-          <RedirectStatCard key={item.uuid} item={item} />
+          <RedirectStatCard key={item.uuid} item={item} range={range} />
         ))}
       </div>
     </div>

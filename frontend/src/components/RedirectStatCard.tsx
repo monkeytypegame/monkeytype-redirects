@@ -6,8 +6,16 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  CartesianGrid,
 } from "recharts";
 import { Card } from "./ui/card";
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "./ui/chart";
 
 interface RedirectStat {
   _id: string;
@@ -26,12 +34,35 @@ interface RedirectStat {
 
 interface RedirectStatCardProps {
   item: RedirectStat;
+  range: number | null;
 }
 
-export function RedirectStatCard({ item }: RedirectStatCardProps) {
-  const chartData = Object.entries(item.stats?.redirectCounts || {}).map(
-    ([date, count]) => ({ date, count })
-  );
+function getFilledChartData(
+  redirectCounts: Record<string, number>,
+  range: number | null
+) {
+  // Dates in redirectCounts are assumed to be YYYY-MM-DD
+  const today = new Date();
+  let days: string[] = [];
+  if (range) {
+    for (let i = range - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      days.push(d.toISOString().slice(0, 10));
+    }
+  } else {
+    // All time: use all keys, sorted
+    days = Object.keys(redirectCounts).sort();
+  }
+  return days.map((date) => ({
+    date,
+    count: redirectCounts[date] || 0,
+  }));
+}
+
+export function RedirectStatCard({ item, range }: RedirectStatCardProps) {
+  const chartData = getFilledChartData(item.stats?.redirectCounts || {}, range);
+
   return (
     <Card className="flex flex-row items-center bg-card text-card-foreground p-8">
       <div className="w-1/4 flex flex-col gap-2">
@@ -71,31 +102,52 @@ export function RedirectStatCard({ item }: RedirectStatCardProps) {
         </div>
       </div>
       <div className="w-3/4 h-50">
-        <ResponsiveContainer width="100%" height="100%">
+        {/* <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
             margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
           >
             <XAxis
               dataKey="date"
-              stroke="#8884d8"
               tick={{ fill: "currentColor" }}
-            />
-            <YAxis
-              stroke="#8884d8"
-              tick={{ fill: "currentColor" }}
-              allowDecimals={false}
+              minTickGap={100}
             />
             <Tooltip
               contentStyle={{
                 background: "#18181b",
                 border: "none",
                 color: "#fff",
+                borderRadius: "0.5rem",
               }}
             />
             <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
           </BarChart>
-        </ResponsiveContainer>
+        </ResponsiveContainer> */}
+        <ChartContainer
+          className="h-full w-full"
+          config={{
+            stuff: {
+              label: "yay",
+            },
+            count: {
+              label: "Redirects",
+              color: "#e2b714",
+            },
+          }}
+        >
+          <BarChart data={chartData}>
+            <CartesianGrid vertical={false} />
+            <XAxis
+              dataKey="date"
+              tickLine={false}
+              axisLine={false}
+              minTickGap={50}
+            ></XAxis>
+            <ChartTooltip content={<ChartTooltipContent />} />
+            {/* <ChartLegend content={<ChartLegendContent />} /> */}
+            <Bar dataKey="count" fill="var(--color-count)" radius={4}></Bar>
+          </BarChart>
+        </ChartContainer>
       </div>
     </Card>
   );
