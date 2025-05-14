@@ -9,6 +9,7 @@ import helmet from "helmet";
 const app = express();
 app.use(cors());
 app.use(helmet());
+app.use(express.json());
 
 const port = process.env.PORT || 3000;
 const prodMode = process.env.NODE_ENV === "production";

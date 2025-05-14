@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import RedirectStats from "./components/RedirectStats";
 import Navbar from "./components/Navbar";
+import AddRedirectDialog from "./components/AddRedirectDialog";
 
 const RANGES = [
   { label: "Last 7 days", value: 7 },
@@ -13,6 +14,7 @@ function App() {
   const [range, setRange] = useState<number | null>(7);
   // Debug: show current Tailwind breakpoint
   const [breakpoint, setBreakpoint] = useState<string>("");
+  const [dialogOpen, setDialogOpen] = useState(false);
   useEffect(() => {
     const getBreakpoint = () => {
       if (window.matchMedia("(min-width: 1536px)").matches) return "2xl";
@@ -29,8 +31,14 @@ function App() {
   }, []);
 
   return (
-    <div className="container mx-auto min-h-screen px-8">
-      <Navbar range={range} setRange={setRange} ranges={RANGES} />
+    <div className="container mx-auto min-h-screen p-8">
+      <Navbar
+        range={range}
+        setRange={setRange}
+        ranges={RANGES}
+        onAddRedirect={() => setDialogOpen(true)}
+      />
+      <AddRedirectDialog open={dialogOpen} setOpen={setDialogOpen} />
       <div
         className="text-xs text-muted-foreground mb-2"
         style={{ position: "absolute", top: 0, left: 0 }}
