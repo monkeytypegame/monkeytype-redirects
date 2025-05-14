@@ -15,6 +15,7 @@ import crypto from "crypto";
 import { authenticateWithBearer } from "../middlewares/authenticate";
 
 const JWT_SECRET = process.env.JWT_SECRET || "changeme";
+const prodMode = process.env.NODE_ENV === "production";
 
 const router = Router();
 
@@ -133,6 +134,13 @@ const authSchema = z.object({
 });
 
 router.post("/register", validateBody(authSchema), async (req, res) => {
+  if (prodMode) {
+    logger.warn("Register endpoint is disabled in production");
+    res.status(403).json({
+      message: "Register endpoint is disabled in production",
+    });
+    return;
+  }
   const { username, password } = req.body;
 
   const user = await findUserByUsername(username);
