@@ -234,12 +234,16 @@ router.get(
         logger.warn(
           `Redirect test failed for ${uuid}: redirected - ${response.redirected} status - ${response.status} url - ${response.url}`
         );
-        if (response.redirected === false) {
-          httpError = `Request was not redirected`;
+        if (response.status === 429) {
+          httpError = `Request was rate limited`;
           return false;
         }
         if (response.status !== 200) {
           httpError = `Request returned status ${response.status}`;
+          return false;
+        }
+        if (response.redirected === false) {
+          httpError = `Request was not redirected`;
           return false;
         }
         if (responseUrl !== targetUrl) {
