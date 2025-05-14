@@ -31,7 +31,10 @@ export default function AddRedirectDialog({
         import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
       const res = await fetch(`${apiBaseUrl}/api/configs`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ source, target }),
       });
       if (!res.ok) {

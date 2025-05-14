@@ -164,7 +164,12 @@ function TestResultBadges({ uuid }: { uuid: string }) {
     setHttpsStatus("loading");
     setHttpError(undefined);
     setHttpsError(undefined);
-    fetch(`${apiBaseUrl}/api/test-redirect/${uuid}`)
+    fetch(`${apiBaseUrl}/api/test-redirect/${uuid}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      },
+    })
       .then(async (res) => {
         if (!res.ok) throw new Error("Failed to test redirect");
         const data = await res.json();
