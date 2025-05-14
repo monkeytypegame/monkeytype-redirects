@@ -3,19 +3,22 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "tsx watch --clear-screen=false src/index.ts",
-    "start": "tsx src/index.ts"
+    "build": "tsc",
+    "start": "npm run build && NODE_ENV=production node dist/index.js"
   },
   "dependencies": {
     "@types/express-rate-limit": "^6.0.2",
     "@types/jsonwebtoken": "^9.0.9",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
+    "dotenv": "^16.5.0",
     "express": "^4.17.1",
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.16.0",
     "path": "^0.12.7",
+    "typescript": "~5.8.3",
     "winston": "^3.17.0",
     "zod": "^3.24.4"
   },

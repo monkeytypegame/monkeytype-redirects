@@ -6,6 +6,9 @@ import logger from "./logger";
 import cors from "cors";
 import helmet from "helmet";
 import { globalRateLimiter } from "./middlewares/rateLimit";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
