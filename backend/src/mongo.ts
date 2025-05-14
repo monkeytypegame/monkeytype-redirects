@@ -1,6 +1,7 @@
 import { MongoClient } from "mongodb";
 import { format } from "date-fns";
 import logger from "./logger";
+import crypto from "crypto";
 
 // MongoDB connection URI
 const MONGO_URI =
@@ -107,6 +108,45 @@ export async function logRedirect(uuid: string): Promise<void> {
     });
     logger.info(`Created new redirect stats entry for UUID: ${uuid}`);
   }
+}
+
+export type User = {
+  _id?: string;
+  username: string;
+  passwordHash: string;
+  createdAt: Date;
+};
+
+export async function createUser(
+  username: string,
+  password: string
+): Promise<void> {
+  const existing = await client
+    .db()
+    .collection<User>("users")
+    .findOne({ username });
+  if (existing) {
+    logger.warn(`Attempted to create duplicate user: ${username}`);
+    throw new Error(`User ${username} already exists`);
+  }
+
+  const salt = crypto.randomBytes(16).toString("hex");
+  const passwordHash = crypto
+    .pbkdf2Sync(password, salt, 100000, 64, "sha512")
+    .toString("hex");
+  const user: User = {
+    username,
+    passwordHash: `${salt}:${passwordHash}`,
+    createdAt: new Date(),
+  };
+  await client.db().collection<User>("users").insertOne(user);
+  logger.info(`Created new user: ${username}`);
+}
+
+export async function findUserByUsername(
+  username: string
+): Promise<User | null> {
+  return client.db().collection<User>("users").findOne({ username });
 }
 
 // Export MongoDB client to be used elsewhere in the application

@@ -25,7 +25,12 @@ export default function RedirectStats({ range }: RedirectStatsProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/ui-data")
+    fetch("http://localhost:3000/api/ui-data", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      },
+    })
       .then((res) => res.json())
       .then((data) => {
         setStats(data.stats || []);

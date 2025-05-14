@@ -1,5 +1,31 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodSchema } from "zod";
+import jwt from "jsonwebtoken";
+import logger from "../logger";
+
+const JWT_SECRET = process.env.JWT_SECRET || "changeme";
+
+export function requireAuth() {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.log("Missing or invalid bearer header");
+      res.status(401).json({ message: "Missing or invalid bearer header" });
+      return;
+    }
+    const token = authHeader.split(" ")[1];
+    try {
+      const payload = jwt.verify(token, JWT_SECRET);
+      (req as any).user = payload;
+      logger.info(`Auth success for user ${(payload as any).username}`);
+      next();
+    } catch (e) {
+      console.log(e);
+      res.status(401).json({ message: "Invalid or expired token" });
+      return;
+    }
+  };
+}
 
 export function validateParams(schema: ZodSchema<any>) {
   return (req: Request, res: Response, next: NextFunction) => {

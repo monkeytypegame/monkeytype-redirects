@@ -4,15 +4,25 @@ import {
   getConfigByUUID,
   getConfigs,
   getRedirectStats,
+  createUser,
+  findUserByUsername,
 } from "../mongo";
-import { validateBody, validateParams } from "../middlewares/validate";
+import {
+  validateBody,
+  validateParams,
+  requireAuth,
+} from "../middlewares/validate";
 import { z } from "zod";
 import logger from "../logger";
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
+
+const JWT_SECRET = process.env.JWT_SECRET || "changeme";
 
 const router = Router();
 
 // Serve static files for the frontend dashboard
-router.get("/configs", async (req, res) => {
+router.get("/configs", requireAuth(), async (req, res) => {
   const configs = (await getConfigs()) ?? [];
   logger.info(`Retrieved ${configs.length} configs`);
 
@@ -29,6 +39,7 @@ const uuidParamsSchema = z.object({
 router.get(
   "/configs/:uuid",
   validateParams(uuidParamsSchema),
+  requireAuth(),
   async (req, res) => {
     const { uuid } = req.params;
     const config = await getConfigByUUID(uuid);
@@ -51,33 +62,39 @@ const createConfigSchema = z.object({
   target: z.string().url(),
 });
 
-router.post("/configs", validateBody(createConfigSchema), async (req, res) => {
-  const { source, target } = req.body;
+router.post(
+  "/configs",
+  validateBody(createConfigSchema),
+  requireAuth(),
+  async (req, res) => {
+    const { source, target } = req.body;
 
-  try {
-    await addConfig(source, target);
-    logger.info("Config created", { source, target });
-    res.status(201).json({
-      message: "Config created successfully",
-      config: { source, target },
-    });
-    return;
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("already exists")) {
-      logger.warn("Config already exists", { source });
-      res.status(409).json({
-        message: "Config already exists",
+    try {
+      await addConfig(source, target);
+      logger.info("Config created", { source, target });
+      res.status(201).json({
+        message: "Config created successfully",
+        config: { source, target },
       });
       return;
-    }
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("already exists")) {
+        logger.warn("Config already exists", { source });
+        res.status(409).json({
+          message: "Config already exists",
+        });
+        return;
+      }
 
-    throw error;
+      throw error;
+    }
   }
-});
+);
 
 router.get(
   "/stats/:uuid",
   validateParams(uuidParamsSchema),
+  requireAuth(),
   async (req, res) => {
     const { uuid } = req.params;
     const config = await getRedirectStats(uuid);
@@ -95,7 +112,7 @@ router.get(
   }
 );
 
-router.get("/ui-data", async (req, res) => {
+router.get("/ui-data", requireAuth(), async (req, res) => {
   const configs = (await getConfigs()) ?? [];
   const stats = await Promise.all(
     configs.map(async (config) => {
@@ -111,6 +128,58 @@ router.get("/ui-data", async (req, res) => {
     message: "UI data retrieved successfully",
     stats,
   });
+});
+
+const authSchema = z.object({
+  username: z.string().min(3),
+  password: z.string().min(6),
+});
+
+router.post("/register", validateBody(authSchema), async (req, res) => {
+  const { username, password } = req.body;
+
+  const user = await findUserByUsername(username);
+  if (!user) {
+    logger.warn(`Register failed for ${username}: user already exists`);
+    res.status(409).json({
+      message: "User already exists",
+    });
+    return;
+  }
+
+  await createUser(username, password);
+  logger.info(`User registered: ${username}`);
+  res.status(201).json({ message: "User registered" });
+});
+
+router.post("/login", validateBody(authSchema), async (req, res) => {
+  const { username, password } = req.body;
+
+  const user = await findUserByUsername(username);
+
+  if (!user) {
+    logger.warn(`Login failed for ${username}: user not found`);
+    res.status(401).json({ message: "Invalid credentials" });
+    return;
+  }
+
+  const [salt, storedHash] = user.passwordHash.split(":");
+  const hash = crypto
+    .pbkdf2Sync(password, salt, 100000, 64, "sha512")
+    .toString("hex");
+  const valid = hash === storedHash;
+  if (!valid) {
+    logger.warn(`Invalid password for user: ${username}`);
+    res.status(401).json({ message: "Invalid credentials" });
+    return;
+  }
+
+  const token = jwt.sign({ username, id: user!._id }, JWT_SECRET, {
+    expiresIn: "7d",
+  });
+
+  logger.info(`User logged in: ${username}`);
+  res.json({ token });
 });
 
 export default router;
