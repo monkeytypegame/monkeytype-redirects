@@ -15,6 +15,7 @@ RUN npm install
 # Now copy the rest of the backend source code (excluding node_modules)
 COPY backend .
 # Copy built frontend into backend's public directory (adjust as needed)
+WORKDIR /
 COPY --from=frontend-builder /app/frontend/dist ./app/frontend/dist
 
 # 3. Run the app
