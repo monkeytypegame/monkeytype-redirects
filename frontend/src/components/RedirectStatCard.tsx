@@ -1,21 +1,6 @@
-import React from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Card } from "./ui/card";
-import {
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "./ui/chart";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "./ui/chart";
 
 interface RedirectStat {
   _id: string;
@@ -35,6 +20,7 @@ interface RedirectStat {
 interface RedirectStatCardProps {
   item: RedirectStat;
   range: number | null;
+  yMax: number;
 }
 
 function getFilledChartData(
@@ -60,7 +46,7 @@ function getFilledChartData(
   }));
 }
 
-export function RedirectStatCard({ item, range }: RedirectStatCardProps) {
+export function RedirectStatCard({ item, range, yMax }: RedirectStatCardProps) {
   const chartData = getFilledChartData(item.stats?.redirectCounts || {}, range);
 
   return (
@@ -102,27 +88,6 @@ export function RedirectStatCard({ item, range }: RedirectStatCardProps) {
         </div>
       </div>
       <div className="w-3/4 h-50">
-        {/* <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={chartData}
-            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-          >
-            <XAxis
-              dataKey="date"
-              tick={{ fill: "currentColor" }}
-              minTickGap={100}
-            />
-            <Tooltip
-              contentStyle={{
-                background: "#18181b",
-                border: "none",
-                color: "#fff",
-                borderRadius: "0.5rem",
-              }}
-            />
-            <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer> */}
         <ChartContainer
           className="h-full w-full"
           config={{
@@ -143,6 +108,7 @@ export function RedirectStatCard({ item, range }: RedirectStatCardProps) {
               axisLine={false}
               minTickGap={50}
             ></XAxis>
+            <YAxis domain={[0, yMax]} />
             <ChartTooltip content={<ChartTooltipContent />} />
             {/* <ChartLegend content={<ChartLegendContent />} /> */}
             <Bar dataKey="count" fill="var(--color-count)" radius={4}></Bar>

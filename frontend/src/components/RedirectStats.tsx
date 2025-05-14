@@ -33,13 +33,24 @@ export default function RedirectStats({ range }: RedirectStatsProps) {
       });
   }, []);
 
+  // Calculate the global max redirect count for all charts
+  const allCounts = stats.flatMap((stat) =>
+    Object.values(stat.stats?.redirectCounts || {})
+  );
+  const globalMax = Math.max(1, ...allCounts); // fallback to 1 if empty
+
   if (loading)
     return <div className="text-center text-muted-foreground">Loading...</div>;
   return (
     <div className="">
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-8">
         {stats.map((item) => (
-          <RedirectStatCard key={item.uuid} item={item} range={range} />
+          <RedirectStatCard
+            key={item.uuid}
+            item={item}
+            range={range}
+            yMax={globalMax}
+          />
         ))}
       </div>
     </div>
