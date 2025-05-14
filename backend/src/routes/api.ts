@@ -208,19 +208,17 @@ router.get(
     });
 
     const portOnDev = process.env.NODE_ENV === "production" ? "" : ":3000";
+    const path = process.env.NODE_ENV === "production" ? "" : "/redirect";
 
     let httpError = "";
     const httpController = new AbortController();
     const httpTimeout = setTimeout(() => httpController.abort(), 3000);
-    const httpGood = await fetch(
-      `http://${config.source}${portOnDev}/redirect`,
-      {
-        headers: {
-          "x-monkeytype-redirects-test": "true",
-        },
-        signal: httpController.signal,
-      }
-    )
+    const httpGood = await fetch(`http://${config.source}${portOnDev}${path}`, {
+      headers: {
+        "x-monkeytype-redirects-test": "true",
+      },
+      signal: httpController.signal,
+    })
       .then(async (response) => {
         clearTimeout(httpTimeout);
         //make sure to remove trailing slashes
@@ -266,7 +264,7 @@ router.get(
     const httpsController = new AbortController();
     const httpsTimeout = setTimeout(() => httpsController.abort(), 3000);
     const httpsGood = await fetch(
-      `https://${config.source}${portOnDev}/redirect`,
+      `https://${config.source}${portOnDev}${path}`,
       {
         headers: {
           "x-monkeytype-redirects-test": "true",
