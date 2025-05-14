@@ -6,8 +6,13 @@ const customFormat = format.combine(
   format.printf((info) => {
     const { level, message, timestamp, stack, ...meta } = info;
     let metaString = "";
-    if (Object.keys(meta).length > 0) {
-      metaString = "\n" + JSON.stringify(meta, null, 2);
+    try {
+      if (Object.keys(meta).length > 0) {
+        metaString = "\n" + JSON.stringify(meta, null, 2);
+      }
+    } catch (error) {
+      metaString =
+        "\n" + "Failed to stringify meta data " + (error as Error).message;
     }
     return `${timestamp} ${level} ${stack || message}${metaString}`;
   })
