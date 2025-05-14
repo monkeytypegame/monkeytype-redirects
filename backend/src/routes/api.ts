@@ -190,6 +190,7 @@ router.post("/login", validateBody(authSchema), async (req, res) => {
 router.get(
   "/test-redirect/:uuid",
   validateParams(uuidParamsSchema),
+  authenticateWithBearer(),
   async (req, res) => {
     const { uuid } = req.params;
     const config = await getConfigByUUID(uuid);
