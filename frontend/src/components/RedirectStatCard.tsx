@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "./ui/tooltip";
+import clsx from "clsx";
 
 interface RedirectStat {
   _id: string;
@@ -186,13 +187,11 @@ function TestResultBadges({ uuid }: { uuid: string }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <Badge
-              className={
-                httpStatus === "loading"
-                  ? "bg-gray-400"
-                  : httpStatus === "success"
-                  ? "bg-green-400"
-                  : "bg-red-400"
-              }
+              className={clsx(
+                httpStatus === "loading" && "bg-gray-400",
+                httpStatus === "success" && "bg-green-400",
+                httpStatus === "error" && "bg-red-400"
+              )}
             >
               {httpStatus === "loading" ? (
                 <LoaderCircle className="animate-spin" strokeWidth={5} />
@@ -218,13 +217,11 @@ function TestResultBadges({ uuid }: { uuid: string }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <Badge
-              className={
-                httpsStatus === "loading"
-                  ? "bg-gray-400"
-                  : httpsStatus === "success"
-                  ? "bg-green-400"
-                  : "bg-red-400"
-              }
+              className={clsx(
+                httpsStatus === "loading" && "bg-gray-400",
+                httpsStatus === "success" && "bg-green-400",
+                httpsStatus === "error" && "bg-red-400"
+              )}
             >
               {httpsStatus === "loading" ? (
                 <LoaderCircle className="animate-spin" strokeWidth={5} />
