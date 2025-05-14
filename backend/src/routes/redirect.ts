@@ -13,6 +13,9 @@ router.get("/", async (req, res) => {
     hostname = hostname.slice(4);
   }
 
+  const isRedirectTesting =
+    req.headers["x-monkeytype-redirects-test"] === "true";
+
   const redirect = await findConfigByHostname(hostname);
 
   if (redirect === null) {
@@ -23,26 +26,38 @@ router.get("/", async (req, res) => {
     return;
   }
 
-  await logRedirect(redirect.uuid)
-    .then(() => {
-      logger.info(`Logged redirect event for ${redirect.uuid}`);
-    })
-    .catch((err: Error) => {
-      logger.error(`Failed to log event for ${redirect.uuid}: ${err.message}`);
-      res.status(500).json({
-        message: `Failed to log redirect event for ${redirect.uuid}`,
+  if (!isRedirectTesting) {
+    await logRedirect(redirect.uuid)
+      .then(() => {
+        logger.info(`Logged redirect event for ${redirect.uuid}`);
+      })
+      .catch((err: Error) => {
+        logger.error(
+          `Failed to log event for ${redirect.uuid}: ${err.message}`
+        );
+        res.status(500).json({
+          message: `Failed to log redirect event for ${redirect.uuid}`,
+        });
+        return;
       });
-      return;
-    });
+  } else {
+    logger.debug(
+      `Not logging redirect event for ${redirect.uuid} due to test header`
+    );
+  }
 
-  logger.info(`Redirecting from ${redirect.source} to ${redirect.target}`);
-  if (!prodMode) {
+  logger.debug("Forcing redirect in DEV mode due to test header");
+  if (!isRedirectTesting) {
+    logger.info(`Redirecting from ${redirect.source} to ${redirect.target}`);
+  }
+
+  if (isRedirectTesting || prodMode) {
+    res.redirect(302, redirect.target);
+  } else {
     //respond with json
     res.status(200).json({
       message: `This will redirect to ${redirect.target} when NOT in DEV mode.`,
     });
-  } else {
-    res.redirect(302, redirect.target);
   }
 });
 

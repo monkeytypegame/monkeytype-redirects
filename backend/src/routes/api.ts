@@ -179,4 +179,148 @@ router.post("/login", validateBody(authSchema), async (req, res) => {
   res.json({ token });
 });
 
+router.get(
+  "/test-redirect/:uuid",
+  validateParams(uuidParamsSchema),
+  async (req, res) => {
+    const { uuid } = req.params;
+    const config = await getConfigByUUID(uuid);
+    if (!config) {
+      logger.warn(`Config ${uuid} not found`);
+      res.status(404).json({
+        message: `Config ${uuid} not found`,
+      });
+      return;
+    }
+
+    logger.info(`Testing redirect for ${uuid}`, {
+      source: config.source,
+      target: config.target,
+    });
+
+    const portOnDev = process.env.NODE_ENV === "production" ? "" : ":3000";
+
+    let httpError = "";
+    const httpGood = await fetch(
+      `http://${config.source}${portOnDev}/redirect`,
+      {
+        headers: {
+          "x-monkeytype-redirects-test": "true",
+        },
+      }
+    )
+      .then(async (response) => {
+        //make sure to remove trailing slashes
+
+        const responseUrl = response.url.replace(/\/+$/, "");
+        const targetUrl = config.target.replace(/\/+$/, "");
+
+        if (
+          response.redirected === true &&
+          response.status === 200 &&
+          responseUrl === targetUrl
+        ) {
+          return true;
+        }
+
+        logger.warn(
+          `Redirect test failed for ${uuid}: redirected - ${response.redirected} status - ${response.status} url - ${response.url}`
+        );
+
+        if (response.redirected === false) {
+          httpError = `Request was not redirected`;
+          return false;
+        }
+
+        if (response.status !== 200) {
+          httpError = `Request returned status ${response.status}`;
+          return false;
+        }
+
+        if (responseUrl !== targetUrl) {
+          httpError = `Request returned url ${responseUrl} instead of ${targetUrl}`;
+          return false;
+        }
+
+        return false;
+      })
+      .catch((e) => {
+        logger.error(`HTTP redirect test failed for ${uuid}`);
+        logger.error("Error", e);
+        httpError = e.cause.code || "Request failed";
+        return false;
+      });
+
+    let httpsError = "";
+    const httpsGood = await fetch(
+      `https://${config.source}${portOnDev}/redirect`,
+      {
+        headers: {
+          "x-monkeytype-redirects-test": "true",
+        },
+      }
+    )
+      .then(async (response) => {
+        //make sure to remove trailing slashes
+
+        const responseUrl = response.url.replace(/\/+$/, "");
+        const targetUrl = config.target.replace(/\/+$/, "");
+
+        if (
+          response.redirected === true &&
+          response.status === 200 &&
+          responseUrl === targetUrl
+        ) {
+          return true;
+        }
+
+        logger.warn(
+          `Redirect test failed for ${uuid}: redirected - ${response.redirected} status - ${response.status} url - ${response.url}`
+        );
+
+        if (response.redirected === false) {
+          httpsError = `Request was not redirected`;
+          return false;
+        }
+
+        if (response.status !== 200) {
+          httpsError = `Request returned status ${response.status}`;
+          return false;
+        }
+
+        if (responseUrl !== targetUrl) {
+          httpsError = `Request returned url ${responseUrl} instead of ${targetUrl}`;
+          return false;
+        }
+
+        return false;
+      })
+      .catch((e) => {
+        logger.error(`HTTPS redirect test failed for ${uuid}`);
+        logger.error("Error", e);
+        httpsError = e.cause.code || "Request failed";
+        return false;
+      });
+
+    logger.info(
+      `Redirect test complete for ${uuid}: http - ${httpGood} ${httpError} https - ${httpsGood} ${httpsError}`
+    );
+
+    res.status(200).json({
+      message: "Redirect test complete",
+      data: {
+        uuid,
+        http: {
+          result: httpGood,
+          error: httpGood ? undefined : httpError,
+        },
+        https: {
+          result: httpsGood,
+          error: httpsGood ? undefined : httpsError,
+        },
+      },
+    });
+  }
+);
+
 export default router;

@@ -19,6 +19,7 @@ export function registerRoutes(app: Router) {
   app.use((req, res, next) => {
     logger.debug("Request received", {
       method: req.method,
+      hostname: req.hostname,
       url: req.url,
       headers: req.headers,
       body: req.body,
