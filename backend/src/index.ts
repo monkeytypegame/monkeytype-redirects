@@ -2,28 +2,31 @@
 import express from "express";
 import { connectToMongo } from "./mongo";
 import { registerRoutes } from "./routes";
+import logger from "./logger";
 
 const app = express();
 const port = process.env.PORT || 3000;
-const mode = process.env.MODE || "DEV";
+const prodMode = process.env.NODE_ENV === "production";
 
 function boot() {
-  console.log("Booting up...");
+  logger.info("Booting up...");
   // Add any additional boot logic here
-  console.log("Connecting to MongoDB...");
+  logger.info("Connecting to MongoDB...");
   connectToMongo()
-    .then(() => console.log("MongoDB connection initialized"))
+    .then(() => logger.info("MongoDB connection initialized"))
     .catch((err) => {
-      console.error("Failed to connect to MongoDB:", err);
+      logger.error("Failed to connect to MongoDB:", err);
       process.exit(1); // Exit if MongoDB connection fails
     });
 
-  console.log("Registering routes...");
+  logger.info("Registering routes...");
   registerRoutes(app);
 
-  console.log("Starting server...");
+  logger.info("Starting server...");
   app.listen(port, () => {
-    console.log(`App listening on port ${port}, mode: ${mode}`);
+    logger.info(
+      `App listening on port ${port}, mode: ${prodMode ? "PROD" : "DEV"}`
+    );
   });
 }
 boot();

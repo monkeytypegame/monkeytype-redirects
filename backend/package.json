@@ -10,6 +10,7 @@
     "express": "^4.17.1",
     "mongodb": "^6.16.0",
     "path": "^0.12.7",
+    "winston": "^3.17.0",
     "zod": "^3.24.4"
   },
   "devDependencies": {

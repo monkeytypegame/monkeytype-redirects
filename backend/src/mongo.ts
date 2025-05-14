@@ -1,5 +1,6 @@
 import { MongoClient } from "mongodb";
 import { format } from "date-fns";
+import logger from "./logger";
 
 // MongoDB connection URI
 const MONGO_URI =
@@ -17,30 +18,51 @@ const client = new MongoClient(MONGO_URI, {
  */
 export async function connectToMongo(): Promise<void> {
   await client.connect();
+  logger.info("Connected to MongoDB");
 }
 
-type Redirect = {
+type Config = {
   uuid: string;
   source: string;
   target: string;
   createdAt: Date;
 };
 
-export function findConfigByHostname(
-  hostname: string
-): Promise<Redirect | null> {
+export async function addConfig(source: string, target: string): Promise<void> {
+  // Check if the config already exists
+  const config = await findConfigByHostname(source);
+  if (config) {
+    logger.warn(`Attempted to add duplicate config for ${source}`);
+    throw new Error(
+      `Config for ${source} already exists with UUID: ${config.uuid}`
+    );
+  }
+
+  const newConfig: Config = {
+    uuid: crypto.randomUUID(),
+    source,
+    target,
+    createdAt: new Date(),
+  };
+  await client.db().collection<Config>("configs").insertOne(newConfig);
+  logger.info(
+    `Added new config for ${source} -> ${target} with UUID: ${newConfig.uuid}`
+  );
+}
+
+export function findConfigByHostname(hostname: string): Promise<Config | null> {
   return client
     .db()
-    .collection<Redirect>("configs")
+    .collection<Config>("configs")
     .findOne({ source: hostname });
 }
 
-export async function getConfigs(): Promise<Redirect[]> {
-  return client.db().collection<Redirect>("configs").find().toArray();
+export async function getConfigs(): Promise<Config[]> {
+  return client.db().collection<Config>("configs").find().toArray();
 }
 
-export async function getConfigByUUID(uuid: string): Promise<Redirect | null> {
-  return client.db().collection<Redirect>("configs").findOne({ uuid });
+export async function getConfigByUUID(uuid: string): Promise<Config | null> {
+  return client.db().collection<Config>("configs").findOne({ uuid });
 }
 
 export type RedirectStats = {
@@ -48,6 +70,7 @@ export type RedirectStats = {
   redirectCounts: Record<string, number>;
   totalRedirects: number;
   lastRedirected: Date;
+  firstRedirected: Date;
 };
 
 export async function getRedirectStats(
@@ -80,8 +103,9 @@ export async function logRedirect(uuid: string): Promise<void> {
       redirectCounts,
       totalRedirects: 1,
       lastRedirected: today,
+      firstRedirected: today,
     });
-    console.log(`Created new redirect entry for UUID: ${uuid}`);
+    logger.info(`Created new redirect stats entry for UUID: ${uuid}`);
   }
 }
 

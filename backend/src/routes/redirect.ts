@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { findConfigByHostname, logRedirect } from "../mongo";
+import logger from "../logger";
 
 const router = Router();
 
-const mode = process.env.MODE || "DEV";
+const prodMode = process.env.NODE_ENV === "production";
 
 // Serve static files for the frontend dashboard
 router.get("/", async (req, res) => {
@@ -15,7 +16,7 @@ router.get("/", async (req, res) => {
   const redirect = await findConfigByHostname(hostname);
 
   if (redirect === null) {
-    console.log(`No redirect found for hostname: ${hostname}`);
+    logger.warn(`No redirect found for hostname: ${hostname}`);
     res.status(404).json({
       message: `No redirect found for hostname: ${hostname}`,
     });
@@ -24,18 +25,18 @@ router.get("/", async (req, res) => {
 
   await logRedirect(redirect.uuid)
     .then(() => {
-      console.log(`Logged redirect event for ${redirect.uuid}`);
+      logger.info(`Logged redirect event for ${redirect.uuid}`);
     })
     .catch((err: Error) => {
-      console.error(`Failed to log event for ${redirect.uuid}:`, err.message);
+      logger.error(`Failed to log event for ${redirect.uuid}: ${err.message}`);
       res.status(500).json({
         message: `Failed to log redirect event for ${redirect.uuid}`,
       });
       return;
     });
 
-  console.log(`Redirecting from ${redirect.source} to ${redirect.target}`);
-  if (mode === "DEV") {
+  logger.info(`Redirecting from ${redirect.source} to ${redirect.target}`);
+  if (!prodMode) {
     //respond with json
     res.status(200).json({
       message: `This will redirect to ${redirect.target} when NOT in DEV mode.`,
