@@ -6,6 +6,12 @@ RUN npm install
 COPY frontend .
 # Remove any .env files if present
 RUN rm -f .env .env.* || true
+
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
+RUN if [ -z "$VITE_API_BASE_URL" ]; then echo "VITE_API_BASE_URL --build-arg is required"; exit 1; fi
+
 RUN npm run build
 
 # 2. Build backend
