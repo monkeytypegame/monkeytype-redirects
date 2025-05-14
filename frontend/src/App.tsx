@@ -67,12 +67,14 @@ function App() {
         onAddRedirect={() => setDialogOpen(true)}
       />
       <AddRedirectDialog open={dialogOpen} setOpen={setDialogOpen} />
-      <div
-        className="text-xs text-muted-foreground mb-2"
-        style={{ position: "absolute", top: 0, left: 0 }}
-      >
-        Breakpoint: {breakpoint}
-      </div>
+      {import.meta.env.DEV && (
+        <div
+          className="text-xs text-muted-foreground mb-2"
+          style={{ position: "absolute", top: 0, left: 0 }}
+        >
+          Breakpoint: {breakpoint}
+        </div>
+      )}
       <RedirectStats range={range} />
     </div>
   );
