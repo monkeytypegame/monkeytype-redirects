@@ -1,63 +1,47 @@
-import { useEffect, useState } from "react";
 import { RedirectStatCard } from "./RedirectStatCard";
-
-interface RedirectStat {
-  _id: string;
-  uuid: string;
-  source: string;
-  target: string;
-  createdAt: string;
-  stats: {
-    _id: string;
-    uuid: string;
-    redirectCounts: Record<string, number>;
-    totalRedirects: number;
-    lastRedirected: string;
-  };
-}
+import type { RedirectStat } from "@/App";
+import { useRef } from "react";
 
 interface RedirectStatsProps {
+  data: RedirectStat[];
   range: number | null;
+  search: string;
 }
 
-export default function RedirectStats({ range }: RedirectStatsProps) {
-  const [stats, setStats] = useState<RedirectStat[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const apiBaseUrl =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
-
-  useEffect(() => {
-    fetch(`${apiBaseUrl}/api/ui-data`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "application/json",
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setStats(data.stats || []);
-        setLoading(false);
-      });
-  }, []);
-
+export default function RedirectStats({
+  data,
+  range,
+  search,
+}: RedirectStatsProps) {
   // Calculate the global max redirect count for all charts
-  const allCounts = stats.flatMap((stat) =>
+  const allCounts = data.flatMap((stat) =>
     Object.values(stat.stats?.redirectCounts || {})
   );
   const globalMax = Math.max(1, ...allCounts); // fallback to 1 if empty
 
-  if (loading)
-    return <div className="text-center text-muted-foreground">Loading...</div>;
+  // Cache for test results by uuid
+  const testResultCache = useRef<Record<string, any>>({});
+
+  const filteredStats = data.filter((item) => {
+    const sourceMatch = item.source
+      .toLowerCase()
+      .includes(search.toLowerCase());
+    const targetMatch = item.target
+      .toLowerCase()
+      .includes(search.toLowerCase());
+    return sourceMatch || targetMatch;
+  });
+
   return (
     <div className="">
       <div className="flex flex-col gap-8">
-        {stats.map((item) => (
+        {filteredStats.map((item) => (
           <RedirectStatCard
             key={item.uuid}
             item={item}
             range={range}
             yMax={globalMax}
+            testResultCache={testResultCache.current}
           />
         ))}
       </div>

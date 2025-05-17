@@ -3,6 +3,22 @@ import RedirectStats from "./components/RedirectStats";
 import Navbar from "./components/Navbar";
 import AddRedirectDialog from "./components/AddRedirectDialog";
 import LoginForm from "./components/LoginForm";
+import { Input } from "./components/ui/input";
+
+export interface RedirectStat {
+  _id: string;
+  uuid: string;
+  source: string;
+  target: string;
+  createdAt: string;
+  stats: {
+    _id: string;
+    uuid: string;
+    redirectCounts: Record<string, number>;
+    totalRedirects: number;
+    lastRedirected: string;
+  };
+}
 
 const RANGES = [
   { label: "Last 7 days", value: 7 },
@@ -20,6 +36,27 @@ function App() {
   const [breakpoint, setBreakpoint] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [authed, setAuthed] = useState(isAuthenticated());
+  const [search, setSearch] = useState("");
+
+  const [data, setData] = useState<RedirectStat[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const apiBaseUrl =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+
+  useEffect(() => {
+    fetch(`${apiBaseUrl}/api/ui-data`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setData(data.stats || []);
+        setLoading(false);
+      });
+  }, []);
 
   useEffect(() => {
     const getBreakpoint = () => {
