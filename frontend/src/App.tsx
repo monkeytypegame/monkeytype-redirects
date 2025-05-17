@@ -112,7 +112,7 @@ function App() {
           Breakpoint: {breakpoint}
         </div>
       )}
-      <RedirectStats range={range} />
+      <RedirectStats data={data} range={range} search={search} />
     </div>
   );
 }
