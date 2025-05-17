@@ -112,6 +112,13 @@ function App() {
           Breakpoint: {breakpoint}
         </div>
       )}
+      {/* <SearchBar className="mb-4" /> */}
+      <Input
+        className="mb-4"
+        placeholder="Search..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
       <RedirectStats data={data} range={range} search={search} />
     </div>
   );
