@@ -266,7 +266,7 @@ router.get(
 
     let httpsError = "";
     const httpsController = new AbortController();
-    const httpsTimeout = setTimeout(() => httpsController.abort(), 3000);
+    const httpsTimeout = setTimeout(() => httpsController.abort(), 10);
     const httpsGood = await fetch(
       `https://${config.source}${portOnDev}${path}`,
       {

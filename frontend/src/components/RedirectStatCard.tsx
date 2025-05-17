@@ -31,6 +31,7 @@ interface RedirectStatCardProps {
   item: RedirectStat;
   range: number | null;
   yMax: number;
+  testResultCache: Record<string, any>;
 }
 
 function getFilledChartData(
@@ -56,7 +57,7 @@ function getFilledChartData(
   }));
 }
 
-export function RedirectStatCard({ item, range, yMax }: RedirectStatCardProps) {
+export function RedirectStatCard({ item, range, yMax, testResultCache }: RedirectStatCardProps) {
   const chartData = getFilledChartData(item.stats?.redirectCounts || {}, range);
 
   return (
@@ -99,7 +100,7 @@ export function RedirectStatCard({ item, range, yMax }: RedirectStatCardProps) {
                 : "—"}
             </div>
           </div>
-          <TestResultBadges uuid={item.uuid} />
+          <TestResultBadges uuid={item.uuid} testResultCache={testResultCache} />
         </div>
       </div>
       <div className="w-full xl:w-3/4 h-50">
@@ -144,7 +145,7 @@ export function RedirectStatCard({ item, range, yMax }: RedirectStatCardProps) {
   );
 }
 
-function TestResultBadges({ uuid }: { uuid: string }) {
+function TestResultBadges({ uuid, testResultCache }: { uuid: string; testResultCache: Record<string, any> }) {
   // State for HTTP/HTTPS test results
   const [httpStatus, setHttpStatus] = useState<"loading" | "success" | "error">(
     "loading"
@@ -156,6 +157,14 @@ function TestResultBadges({ uuid }: { uuid: string }) {
   const [httpsError, setHttpsError] = useState<string | undefined>();
 
   useEffect(() => {
+    if (testResultCache[uuid]) {
+      const data = testResultCache[uuid];
+      setHttpStatus(data.httpStatus);
+      setHttpsStatus(data.httpsStatus);
+      setHttpError(data.httpError);
+      setHttpsError(data.httpsError);
+      return;
+    }
     const apiBaseUrl =
       import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -174,20 +183,34 @@ function TestResultBadges({ uuid }: { uuid: string }) {
         if (!res.ok) throw new Error("Failed to test redirect");
         const data = await res.json();
         if (!isMounted) return;
-        setHttpStatus(data.data.http.result ? "success" : "error");
-        setHttpsStatus(data.data.https.result ? "success" : "error");
+        const httpStatusVal = data.data.http.result ? "success" : "error";
+        const httpsStatusVal = data.data.https.result ? "success" : "error";
+        setHttpStatus(httpStatusVal);
+        setHttpsStatus(httpsStatusVal);
         setHttpError(data.data.http.error);
         setHttpsError(data.data.https.error);
+        testResultCache[uuid] = {
+          httpStatus: httpStatusVal,
+          httpsStatus: httpsStatusVal,
+          httpError: data.data.http.error,
+          httpsError: data.data.https.error,
+        };
       })
       .catch(() => {
         if (!isMounted) return;
         setHttpStatus("error");
         setHttpsStatus("error");
+        testResultCache[uuid] = {
+          httpStatus: "error",
+          httpsStatus: "error",
+          httpError: undefined,
+          httpsError: undefined,
+        };
       });
     return () => {
       isMounted = false;
     };
-  }, [uuid]);
+  }, [uuid, testResultCache]);
 
   return (
     <div className="flex gap-2">
